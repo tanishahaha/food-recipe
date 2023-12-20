@@ -9,9 +9,9 @@ connectDB();
 
 // Configure Cloudinary (Ensure to set these values securely, preferably using environment variables)
 cloudinary.v2.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET,
+  cloud_name: process.env.STORAGE_NAME,
+  api_key: process.env.STORAGE_API_KEY,
+  api_secret: process.env.STORAGE_API_SECRET,
 });
 
 export const config = {
