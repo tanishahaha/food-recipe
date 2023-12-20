@@ -38,7 +38,7 @@ const RecipeForm: React.FC<{ userId: string | null }> = ({ userId }) => {
 
     try {
       console.log(formData);
-      const response = await axios.post('/api/recipes', formData, {
+      const response = await axios.post(`/api/recipes`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -52,6 +52,7 @@ const RecipeForm: React.FC<{ userId: string | null }> = ({ userId }) => {
         setIngredients('');
         setInstructions('');
         setImage(null);
+        alert("hogaya");
         // <RecipeList/>
         // Handle success scenario
       } else {

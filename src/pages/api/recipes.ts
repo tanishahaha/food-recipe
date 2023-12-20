@@ -3,28 +3,23 @@ import multer from 'multer';
 import mongoose from "mongoose";
 import connectDB from "@/utils/connectDB";
 import Recipe, { Recipe as RecipeType } from "../../../models/Recipe";
-import fs from 'fs';
-import path from 'path';
+import cloudinary from 'cloudinary';
 
 connectDB();
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+// Configure Cloudinary (Ensure to set these values securely, preferably using environment variables)
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
+});
 
-let imageCount = 1;
-
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR);
-} else {
-  const existingImages = fs.readdirSync(UPLOAD_DIR);
-  imageCount = existingImages.length + 1;
-}
-
-export const config ={
-  api:{
-    externalResolver:true,
-    bodyParser:false,
-  }
-}
+export const config = {
+  api: {
+    externalResolver: true,
+    bodyParser: false,
+  },
+};
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -43,17 +38,17 @@ const handler = async (req: any, res: any) => {
     try {
       const { title, description, ingredients, instructions, createdBy } = req.body;
 
-      const imageName = `${imageCount}.png`;
-      const imagePath = path.join(UPLOAD_DIR, imageName);
-
-      fs.writeFileSync(imagePath, req.file?.buffer);
+      // Upload image to Cloudinary
+      const uploadResult = await cloudinary.v2.uploader.upload(req.file.buffer, {
+        folder: 'uploads',
+      });
 
       const newRecipeData: Partial<RecipeType> = {
         title,
         description,
         ingredients,
         instructions,
-        image: `/uploads/${imageName}`, // Relative URL of the image
+        image: uploadResult.secure_url, // Use the Cloudinary URL as the image URL
         createdBy: new mongoose.Types.ObjectId(createdBy),
       };
 
