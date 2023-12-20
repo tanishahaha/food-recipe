@@ -1,27 +1,33 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import multer from 'multer';
+import cloudinary from 'cloudinary';
+import fs from 'fs';
+import path from 'path';
 import mongoose from "mongoose";
 import connectDB from "@/utils/connectDB";
 import Recipe, { Recipe as RecipeType } from "../../../models/Recipe";
-import cloudinary from 'cloudinary';
 
 connectDB();
 
-// Configure Cloudinary (Ensure to set these values securely, preferably using environment variables)
 cloudinary.v2.config({
-  cloud_name: process.env.STORAGE_NAME,
-  api_key: process.env.STORAGE_API_KEY,
-  api_secret: process.env.STORAGE_API_SECRET,
+  cloud_name: process.env.STORAGE_NAME, // Replace with your Cloudinary cloud name
+  api_key: process.env.STORAGE_API_KEY, // Replace with your Cloudinary API key
+  api_secret: process.env.STORAGE_API_SECRET // Replace with your Cloudinary API secret
 });
 
-export const config = {
-  api: {
-    externalResolver: true,
-    bodyParser: false,
-  },
-};
+const UPLOAD_DIR = path.join(process.cwd(), 'tmp'); // Adjust directory for temporary files
 
-const storage = multer.memoryStorage();
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR);
+}
+
+const storage = multer.diskStorage({
+  destination: UPLOAD_DIR,
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}.${file.mimetype.split('/')[1]}`); // Generate unique filename
+  }
+});
+
 const upload = multer({ storage: storage });
 
 const handler = async (req: any, res: any) => {
@@ -38,17 +44,21 @@ const handler = async (req: any, res: any) => {
     try {
       const { title, description, ingredients, instructions, createdBy } = req.body;
 
-      // Upload image to Cloudinary
-      const uploadResult = await cloudinary.v2.uploader.upload(req.file.buffer, {
-        folder: 'uploads',
+      const uploadedImage = await cloudinary.v2.uploader.upload(req.file.path, {
+        resource_type: 'image',
+        // Optional: Add transformations or other upload options here
       });
+
+      const imageUrl = uploadedImage.secure_url;
+
+      fs.unlinkSync(req.file.path); // Delete the temporary file
 
       const newRecipeData: Partial<RecipeType> = {
         title,
         description,
         ingredients,
         instructions,
-        image: uploadResult.secure_url, // Use the Cloudinary URL as the image URL
+        image: imageUrl, // Store the Cloudinary image URL
         createdBy: new mongoose.Types.ObjectId(createdBy),
       };
 
@@ -63,5 +73,11 @@ const handler = async (req: any, res: any) => {
     }
   });
 };
-
+export const config ={
+  api:{
+    externalResolver:true,
+    bodyParser:false,
+  }
+}
 export default handler;
+
