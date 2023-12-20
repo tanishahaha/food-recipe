@@ -12,7 +12,7 @@ const Home: React.FC = () => {
       const token = Cookies.get('token');
       if (token) {
         try {
-          const response = await axios.get('http://localhost:3000/api/me', {
+          const response = await axios.get('/api/me', {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUser(response.data.user);

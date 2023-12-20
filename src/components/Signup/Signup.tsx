@@ -16,7 +16,7 @@ const Signup: React.FC = () => {
   const onSubmitButton = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:3000/api/users`,
+        `/api/users`,
         {
           name,
           email,

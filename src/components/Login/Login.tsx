@@ -13,7 +13,7 @@ const Login:React.FC=()=>{
   const onSubmitButton=async()=>{
 
     try{
-      const response=await axios.post(`http://localhost:3000/api/login`,{email,password});
+      const response=await axios.post(`/api/login`,{email,password});
 
       if(response.data.success){
         Cookies.set('token',response.data.token,{expires: 5});
